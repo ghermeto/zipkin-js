@@ -65,7 +65,10 @@ describe('memcached interceptor', () => {
     const tracer = new Tracer({ctxImpl, recorder});
 
     const memcached = getMemcached(tracer);
-    memcached.on('error', done);
+    memcached.on('error', () => {
+      memcached.end();
+      done();
+    });
     tracer.setId(tracer.createRootId());
     const ctx = ctxImpl.getContext();
     memcached.set('ping', 'pong', 10, () => {
@@ -109,7 +112,7 @@ describe('memcached interceptor', () => {
             expect(ann.traceId.spanId).not.to.equal(firstAnn.traceId.traceId);
             expect(ann.traceId.traceId).to.equal(firstAnn.traceId.traceId);
           });
-
+          memcached.end();
           done();
         });
       });
